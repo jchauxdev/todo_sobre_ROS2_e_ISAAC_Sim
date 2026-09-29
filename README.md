@@ -21,6 +21,16 @@ La distribución de ROS2 con la que vamos a trabajar es con **ROS 2 Humble Hawks
 
 ---
 
+## 🌐 ¿Qué es NVIDIA Isaac Sim?
+
+**Isaac Sim** es la plataforma de simulación robótica de NVIDIA, construida sobre Omniverse. Permite crear entornos fotorrealistas con física precisa (PhysX), generar datos sintéticos para entrenar modelos de percepción y probar robots antes de llevarlos a hardware real, con soporte nativo para **ROS 2** a través de su bridge integrado.
+
+A diferencia de Gazebo, Isaac Sim requiere una **GPU NVIDIA RTX** y está orientado a simulaciones de alta fidelidad (renderizado con trazado de rayos, sensores simulados con ruido realista, generación de datasets). Es la opción recomendada cuando el proyecto necesita visión por computadora, aprendizaje por refuerzo o gemelos digitales.
+
+El primer paso para empezar a usarlo es instalar **Isaac Sim 6.1.0 en Ubuntu 24.04**, cubierto en la guía [🌐 Instalación de Isaac Sim 6.1.0](docs/isaac_sim/isaac-sim-ubuntu24/isaac-sim-6.1.0.md).
+
+---
+
 ## 📁 Contenido
 
 Este repositorio está organizado en guías independientes. Cada una cubre un aspecto específico del ecosistema ROS 2.
@@ -72,6 +82,12 @@ Antes de instalar ROS 2, tu equipo debe contar con Ubuntu funcionando como siste
 | Guía | Descripción |
 |---|---|
 | [🤖 TurtleBot3 con ROS 2 Humble](docs/turtlebot3/turtlebot3-humble.md) | Instalación, configuración y simulación en Gazebo con TurtleBot3 Waffle Pi |
+
+### 🌐 NVIDIA Isaac Sim
+
+| Guía | Descripción | Plataforma |
+|---|---|---|
+| [🌐 Instalación de Isaac Sim 6.1.0](docs/isaac_sim/isaac-sim-ubuntu24/isaac-sim-6.1.0.md) | Primer paso: instalación, verificación de compatibilidad y primer arranque de Isaac Sim | Ubuntu 24.04 (workstation con GPU NVIDIA RTX) |
 
 ---
 
