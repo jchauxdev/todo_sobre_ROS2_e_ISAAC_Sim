@@ -286,6 +286,6 @@ rosdep install -i --from-path src/py_pubsub --rosdistro humble -y
 
 <div align="center">
 
-[← Volver a TurtleBot3 con ROS 2 Humble](../turtlebot3/turtlebot3-humble.md)
+[← Volver a TurtleBot3 con ROS 2 Humble](../turtlebot3/turtlebot3-humble.md) &nbsp;|&nbsp; [Mover TurtleBot3 publicando en /cmd_vel →](python-cmd-vel-turtlebot3.md)
 
 </div>

@@ -88,6 +88,7 @@ Antes de instalar ROS 2, tu equipo debe contar con Ubuntu funcionando como siste
 | Guía | Descripción |
 |---|---|
 | [🐍 Publicador y Suscriptor en Python](docs/examples/python-pub-sub.md) | Ejemplo oficial de ROS 2 — creación de un paquete `py_pubsub` con nodos talker/listener usando `rclpy` |
+| [🕹️ Mover TurtleBot3 publicando en `/cmd_vel`](docs/examples/python-cmd-vel-turtlebot3.md) | Script en Python que mueve el robot en línea recta, gira a la derecha y se detiene |
 
 ### 🌐 NVIDIA Isaac Sim
 
