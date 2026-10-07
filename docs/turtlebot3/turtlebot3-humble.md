@@ -21,6 +21,7 @@
 - [Configuración del entorno](#configuración-del-entorno)
 - [Lanzar la simulación en Gazebo](#lanzar-la-simulación-en-gazebo)
 - [Controlar el robot con el teclado](#controlar-el-robot-con-el-teclado)
+- [Mover el robot publicando directamente en `/cmd_vel`](#mover-el-robot-publicando-directamente-en-cmd_vel)
 - [Visualizar el robot en RViz2](#visualizar-el-robot-en-rviz2)
 - [Compilar desde código fuente (recomendado)](#compilar-desde-código-fuente-recomendado)
 - [Solución de problemas comunes](#solución-de-problemas-comunes)
@@ -189,6 +190,28 @@ a / d : aumentar / reducir velocidad angular
 s     : detener el robot
 CTRL+C: salir
 ```
+
+---
+
+## Mover el robot publicando directamente en `/cmd_vel`
+
+También puedes mover el robot sin el teleoperador, publicando un único mensaje directamente al tópico `/cmd_vel` desde la terminal:
+
+```bash
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}, angular: {z: 0.5}}"
+```
+
+- `--once` envía el mensaje una sola vez (el robot mantiene esa velocidad hasta recibir un nuevo comando).
+- `linear.x` controla la velocidad lineal hacia adelante (m/s).
+- `angular.z` controla la velocidad angular (rad/s): positivo gira a la izquierda, negativo a la derecha.
+
+Para detener el robot, publica un mensaje con todas las velocidades en cero:
+
+```bash
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angular: {z: 0.0}}"
+```
+
+> Para una secuencia de movimientos más elaborada (avanzar, girar y detenerse) controlada desde un script en Python, ver la guía [🕹️ Mover TurtleBot3 publicando en `/cmd_vel`](../examples/python-cmd-vel-turtlebot3.md).
 
 ---
 
