@@ -194,7 +194,7 @@ Instala las dependencias y compila solo el paquete `py_pubsub`:
 
 ```bash
 cd ~/workspaces/robot_ws
-rosdep install -i --from-path src --rosdistro humble -y
+rosdep install -i --from-path src/py_pubsub --rosdistro humble -y
 
 colcon build --packages-select py_pubsub
 source install/setup.bash
@@ -257,7 +257,17 @@ Falta correr `rosdep install` o el entorno base de ROS 2 no está cargado:
 
 ```bash
 source /opt/ros/humble/setup.bash
-rosdep install -i --from-path src --rosdistro humble -y
+rosdep install -i --from-path src/py_pubsub --rosdistro humble -y
+```
+
+### `rosdep install` falla con paquetes de otros proyectos del workspace (ej. `warehouse_ros_mongo`)
+
+Si `src/` tiene otros paquetes además de `py_pubsub` (por ejemplo, paquetes de un brazo robótico con MoveIt), ejecutar `rosdep install --from-path src` escaneará **todos** los paquetes del workspace, no solo el tuyo. Si alguno depende de un paquete sin binario `.deb` disponible para Humble (como `ros-humble-warehouse-ros-mongo`), la instalación fallará aunque no tenga nada que ver con `py_pubsub`.
+
+**Solución:** apunta `--from-path` directamente a la carpeta del paquete en lugar de a todo `src/`:
+
+```bash
+rosdep install -i --from-path src/py_pubsub --rosdistro humble -y
 ```
 
 ---
