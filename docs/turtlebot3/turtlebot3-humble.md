@@ -338,6 +338,6 @@ El tópico `/cmd_vel` debe aparecer en la lista. Si no está, la simulación no 
 
 <div align="center">
 
-[← Volver a Creación del Workspace](../workspace/robot-ws.md)
+[← Volver a Creación del Workspace](../workspace/robot-ws.md) &nbsp;|&nbsp; [Publicador y Suscriptor en Python →](../examples/python-pub-sub.md)
 
 </div>

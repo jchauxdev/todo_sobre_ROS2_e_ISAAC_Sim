@@ -83,6 +83,12 @@ Antes de instalar ROS 2, tu equipo debe contar con Ubuntu funcionando como siste
 |---|---|
 | [🤖 TurtleBot3 con ROS 2 Humble](docs/turtlebot3/turtlebot3-humble.md) | Instalación, configuración y simulación en Gazebo con TurtleBot3 Waffle Pi |
 
+### 🐍 Ejemplos de código
+
+| Guía | Descripción |
+|---|---|
+| [🐍 Publicador y Suscriptor en Python](docs/examples/python-pub-sub.md) | Ejemplo oficial de ROS 2 — creación de un paquete `py_pubsub` con nodos talker/listener usando `rclpy` |
+
 ### 🌐 NVIDIA Isaac Sim
 
 | Guía | Descripción | Plataforma |
