@@ -21,6 +21,7 @@
 - [Configuración del entorno](#configuración-del-entorno)
 - [Lanzar la simulación en Gazebo](#lanzar-la-simulación-en-gazebo)
 - [Controlar el robot con el teclado](#controlar-el-robot-con-el-teclado)
+- [Visualizar el robot en RViz2](#visualizar-el-robot-en-rviz2)
 - [Compilar desde código fuente (recomendado)](#compilar-desde-código-fuente-recomendado)
 - [Solución de problemas comunes](#solución-de-problemas-comunes)
 
@@ -188,6 +189,20 @@ a / d : aumentar / reducir velocidad angular
 s     : detener el robot
 CTRL+C: salir
 ```
+
+---
+
+## Visualizar el robot en RViz2
+
+Con la simulación corriendo, abre una **segunda terminal** y lanza RViz2 con la configuración ya preparada para TurtleBot3:
+
+```bash
+ros2 launch turtlebot3_bringup rviz2.launch.py
+```
+
+Esto abre RViz2 con los displays típicos ya cargados (modelo del robot, escaneo LiDAR, TF, mapa si hay uno disponible), sin necesidad de configurarlos manualmente.
+
+> Si RViz2 se abre pero no muestra el robot, verifica que el `Fixed Frame` esté configurado como `odom` o `base_link` y que el tópico `/scan` esté publicando datos (`ros2 topic list`).
 
 ---
 
