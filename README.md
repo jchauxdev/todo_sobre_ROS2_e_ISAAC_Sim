@@ -83,6 +83,13 @@ Antes de instalar ROS 2, tu equipo debe contar con Ubuntu funcionando como siste
 |---|---|
 | [🤖 TurtleBot3 con ROS 2 Humble](docs/turtlebot3/turtlebot3-humble.md) | Instalación, configuración y simulación en Gazebo con TurtleBot3 Waffle Pi |
 
+### 🦿 Robots Unitree (Gazebo)
+
+| Guía | Descripción |
+|---|---|
+| [🐕 Unitree Go1 en Gazebo](docs/unitree/unitree-go1-gazebo.md) | Perro robot en Gazebo 11 con ROS 2 Humble; la marcha se controla publicando en `/cmd_vel` |
+| [🦾 Unitree G1 en Gazebo](docs/unitree/unitree-g1-gazebo.md) | Humanoide de pie en Gazebo 11 con `ros2_control`; articulaciones controladas por tópicos (la marcha requiere una política RL) |
+
 ### 🐍 Ejemplos de código
 
 | Guía | Descripción |
