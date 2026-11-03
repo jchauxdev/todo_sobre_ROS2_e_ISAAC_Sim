@@ -98,7 +98,7 @@ cp ~/unitree_ros/robots/g1_description/<archivo_elegido>.urdf urdf/g1_original.u
 cp -r ~/unitree_ros/robots/g1_description/meshes .
 ```
 
-> Reemplaza `<archivo_elegido>` por el nombre real. Las rutas de las mallas dentro del URDF suelen tener la forma `package://g1_description/meshes/...`; el script del siguiente paso las reescribe para que apunten a este paquete.
+> Reemplaza `<archivo_elegido>` por el nombre real. Según la versión, las rutas de las mallas dentro del URDF tienen la forma `package://g1_description/meshes/...` o son relativas (`meshes/pelvis.STL`); el script del siguiente paso reescribe ambas para que apunten a este paquete.
 
 ---
 
@@ -110,7 +110,8 @@ El URDF original no trae interfaces de `ros2_control` ni está anclado al mundo.
 #!/usr/bin/env python3
 """Prepara el URDF del G1 para Gazebo + ros2_control.
 
-- Reescribe las rutas package://g1_description -> package://g1_gazebo
+- Reescribe las rutas de mallas (package://g1_description/... o meshes/...)
+  -> package://g1_gazebo/meshes/...
 - Ancla el link raíz al mundo (el robot queda de pie, suspendido)
 - Agrega una interfaz de posición ros2_control por cada articulación móvil
 - Genera config/g1_controllers.yaml
@@ -129,6 +130,8 @@ for el in robot.iter():
     for k, v in el.attrib.items():
         if 'package://g1_description' in v:
             el.set(k, v.replace('package://g1_description', 'package://g1_gazebo'))
+        elif k == 'filename' and v.startswith('meshes/'):
+            el.set(k, 'package://g1_gazebo/' + v)
 
 # 2. Link raíz = el que nunca es hijo de una articulación
 children = {j.find('child').get('link') for j in robot.findall('joint')}
@@ -160,7 +163,8 @@ plug = ET.SubElement(gz, 'plugin', name='gazebo_ros2_control',
 ET.SubElement(plug, 'parameters').text = 'CONTROLLERS_YAML'
 
 ET.indent(tree)
-tree.write(DST_URDF, encoding='utf-8', xml_declaration=True)
+# Sin <?xml ... encoding?>: spawn_entity.py no acepta esa declaración en el texto
+tree.write(DST_URDF, encoding='unicode', xml_declaration=False)
 
 # 4. Archivo de controladores
 names = [j.get('name') for j in moving]
@@ -244,6 +248,17 @@ Y registra las carpetas en el `CMakeLists.txt` del paquete, antes de `ament_pack
 ```cmake
 install(DIRECTORY urdf launch config meshes
   DESTINATION share/${PROJECT_NAME})
+```
+
+Por último, en el `package.xml` del paquete agrega la dependencia de `gazebo_ros` y, dentro de `<export>`, la ruta de modelos. Sin esto Gazebo no encuentra las mallas `package://g1_gazebo/...` y el robot se crea pero queda **invisible**:
+
+```xml
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/.."/>
+  </export>
 ```
 
 ---
@@ -366,16 +381,24 @@ Para **ver caminar a un robot en Gazebo hoy**, lo más directo es el perro [Go1]
 
 ## Solución de problemas comunes
 
+### `spawn_entity.py` falla con `Unicode strings with encoding declaration are not supported`
+
+El URDF generado empieza con `<?xml version='1.0' encoding='utf-8'?>` y `spawn_entity.py` no acepta esa declaración. Como el robot no se crea, después aparece `waiting for service /controller_manager/load_controller`. Asegúrate de que `prepare_g1.py` escribe con `encoding='unicode', xml_declaration=False`, vuelve a ejecutarlo y recompila:
+
+```bash
+head -c 40 ~/workspaces/robot_ws/src/g1_gazebo/urdf/g1_ros2control.urdf   # debe empezar por <robot
+```
+
 ### Gazebo abre pero el robot no aparece o aparece sin mallas
 
-Las rutas de las mallas no se resolvieron. Verifica que existan y que el URDF generado apunte a `g1_gazebo`:
+Si `ros2 control list_controllers` muestra los controladores `active`, el robot sí se creó y lo que falla son las mallas. Verifica que existan, que el URDF generado apunte a `package://g1_gazebo/meshes/...` y que el `package.xml` tenga el `<gazebo_ros gazebo_model_path="${prefix}/.."/>` del [launch file](#launch-file):
 
 ```bash
 ls ~/workspaces/robot_ws/install/g1_gazebo/share/g1_gazebo/meshes | head
-grep -m3 "package://" ~/workspaces/robot_ws/src/g1_gazebo/urdf/g1_ros2control.urdf
+grep -o 'filename="[^"]*"' ~/workspaces/robot_ws/src/g1_gazebo/urdf/g1_ros2control.urdf | sort -u | head
 ```
 
-Si el URDF original usaba otro prefijo (distinto de `package://g1_description`), ajusta la cadena en `prepare_g1.py`.
+Si alguna ruta no empieza por `package://g1_gazebo/`, el URDF original usa otro formato: ajusta la sección de rutas en `prepare_g1.py`. Tras cambiar `package.xml`, recompila y vuelve a hacer `source install/setup.bash`.
 
 ### `ros2 control list_controllers` no muestra nada
 
