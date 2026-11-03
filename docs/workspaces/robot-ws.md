@@ -34,8 +34,10 @@
 Verifica que `colcon` esté disponible:
 
 ```bash
-colcon --version
+colcon version-check
 ```
+
+> `colcon` **no tiene** la opción `--version` (da error de argumento no reconocido aunque esté instalado). Para ver la versión usa `pip3 show colcon-core` o `apt show python3-colcon-core`. Si `colcon version-check` imprime la lista de paquetes sin error, está instalado correctamente.
 
 Si no está instalado:
 
