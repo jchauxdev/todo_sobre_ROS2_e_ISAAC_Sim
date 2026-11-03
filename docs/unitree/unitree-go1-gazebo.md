@@ -21,6 +21,7 @@
 - [Instalar las dependencias](#instalar-las-dependencias)
 - [Clonar y compilar los paquetes](#clonar-y-compilar-los-paquetes)
 - [Lanzar la simulación](#lanzar-la-simulación)
+- [Mover el Go1 con el teclado (modo trotting)](#mover-el-go1-con-el-teclado-modo-trotting)
 - [Poner a caminar al Go1 por tópicos](#poner-a-caminar-al-go1-por-tópicos)
 - [Tópicos disponibles](#tópicos-disponibles)
 - [Solución de problemas comunes](#solución-de-problemas-comunes)
@@ -123,20 +124,80 @@ ros2 launch go1_gazebo spawn_go1.launch.py
 
 Esto abre Gazebo, coloca al robot y carga los controladores de cada articulación. **Espera a ver en la terminal que el último controlador (`RL_calf_controller`) cargó correctamente** antes de continuar.
 
+> ℹ️ Es normal que, al abrir Gazebo, el robot se mueva "como loco" o se desplome: todavía nadie envía órdenes a las articulaciones. Se estabiliza en cuanto `junior_ctrl` lo pone de pie (tecla `2`).
+
 ### Terminal 2 — Controlador de la marcha
 
 ```bash
 ros2 run unitree_guide2 junior_ctrl
 ```
 
-Con esta terminal en primer plano, presiona las teclas para cambiar de modo:
+La salida esperada es:
+
+```
+[ERROR] Function setProcessScheduler failed.
+initialized node
+The control interface for ROS 2 Gazebo simulation
+robot_name: go2
+init recv
+executor thread detached and running
+initialized ctrl components
+initialized wave generator
+Initialized cmd vel sub
+initialized ctrl frame
+```
+
+- `[ERROR] Function setProcessScheduler failed.` **no afecta a la simulación**: el programa intenta darse prioridad de tiempo real y eso solo se permite como root.
+- `robot_name: go2` es un valor por defecto que la versión de ROS 2 no usa (los tópicos no llevan el nombre del robot). Se compila para el Go1 (`ROBOT_TYPE Go1` en el `CMakeLists.txt`).
+- `Initialized cmd vel sub` **no** significa que el robot ya obedezca `/cmd_vel`: el controlador arranca en modo `passive` y hay que cambiar de modo con el teclado.
+
+`junior_ctrl` es una **máquina de estados** que lee el teclado de su propia terminal. Con esta terminal en primer plano, presiona las teclas (sin `Enter`) para cambiar de modo:
 
 | Tecla | Modo | Efecto |
 |---|---|---|
+| `1` | `passive` | Modo inicial: articulaciones sin control, el robot queda tirado |
 | `2` | `fixed_stand` | El robot se levanta y queda de pie |
-| `5` | `move_base` | El robot empieza a aceptar comandos de velocidad por `/cmd_vel` |
+| `3` | `free_stand` | De pie, puede inclinar y mover el cuerpo sin dar pasos |
+| `4` | `trotting` | Trota y se maneja **con el teclado** (ver [modo trotting](#mover-el-go1-con-el-teclado-modo-trotting)) |
+| `5` | `move_base` | Trota y obedece los comandos de velocidad de `/cmd_vel` |
 
-> ⚠️ El orden importa: primero `2` (de pie) y luego `5`. Si publicas en `/cmd_vel` antes de entrar en `move_base`, el robot no reaccionará.
+Cada cambio se confirma en la terminal, por ejemplo `Switched from passive to fixed stand`. No todos los cambios están permitidos:
+
+| Desde | Puedes ir a |
+|---|---|
+| `passive` | `fixed_stand` (`2`) |
+| `fixed_stand` | `passive` (`1`), `free_stand` (`3`), `trotting` (`4`), `move_base` (`5`) |
+| `free_stand` | `passive` (`1`), `fixed_stand` (`2`), `trotting` (`4`) |
+| `trotting` | `passive` (`1`), `fixed_stand` (`2`) |
+| `move_base` | `passive` (`1`), `fixed_stand` (`2`) |
+
+> ⚠️ El orden importa: primero `2` (de pie) y luego `4` o `5`. Para pasar de `trotting` a `move_base` (o al revés) hay que volver antes a `fixed_stand`: `2` y luego `5`. Si publicas en `/cmd_vel` fuera de `move_base`, el robot no reaccionará.
+
+---
+
+## Mover el Go1 con el teclado (modo trotting)
+
+Con el robot en `trotting` (`2` y luego `4`), muévelo con estas teclas en la terminal de `junior_ctrl`:
+
+| Tecla | Acción | Límite del Go1 |
+|---|---|---|
+| `w` / `s` | Avanzar / retroceder | ±0.4 m/s |
+| `d` / `a` | Desplazarse a la derecha / izquierda | ±0.3 m/s |
+| `j` / `l` | Girar a la izquierda / derecha | ±0.5 rad/s |
+| `espacio` | Poner todas las velocidades en cero | — |
+
+**Las teclas no funcionan como un joystick.** Cada pulsación suma un pequeño incremento (5 % del recorrido del joystick virtual, que va de -1 a 1) y el valor **se queda guardado** hasta que lo cambies:
+
+| Pulsaciones de `w` | Velocidad de avance aproximada |
+|---|---|
+| 1 | 0.02 m/s (imperceptible) |
+| 5 | 0.10 m/s |
+| 10 | 0.20 m/s |
+| 20 | 0.40 m/s (máximo) |
+
+En los demás ejes ocurre lo mismo: una pulsación de `a`/`d` son unos 0.015 m/s y una de `j`/`l` unos 0.025 rad/s. Por eso, si pulsas `w` dos o tres veces, parece que el robot no se mueve: **pulsa unas 10 veces** para verlo avanzar, y `espacio` para detenerlo.
+
+> ⚠️ Mientras lo conduces, evita las teclas `1`, `2` y `5`: cambian de modo.
 
 ---
 
@@ -176,7 +237,7 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angul
 | `linear.y` | Desplazamiento lateral (m/s) — los cuadrúpedos pueden caminar de lado |
 | `angular.z` | Giro (rad/s). Positivo = izquierda |
 
-> 💡 Empieza con velocidades bajas (`x: 0.2`). Con valores altos la marcha simulada puede volverse inestable.
+> 💡 Empieza con velocidades bajas (`x: 0.2`). Los límites del modelo Go1 son 0.4 m/s de avance, 0.3 m/s lateral y 0.5 rad/s de giro. En `move_base` los valores de `/cmd_vel` **no se recortan** a esos límites, así que no los superes: con valores altos la marcha simulada puede volverse inestable.
 
 También puedes reutilizar el script de la guía [🕹️ Mover TurtleBot3 publicando en `/cmd_vel`](../examples/python-cmd-vel-turtlebot3.md): el código es el mismo, solo cambian las velocidades.
 
@@ -207,11 +268,23 @@ ros2 topic echo /odom --once
 
 Lo lanzaste demasiado pronto. Espera a que la Terminal 1 muestre que `RL_calf_controller` terminó de cargar y vuelve a ejecutarlo.
 
+### `[ERROR] Function setProcessScheduler failed.`
+
+No es un fallo: `junior_ctrl` intenta ejecutarse con prioridad de tiempo real y eso requiere permisos de root. En simulación se puede ignorar. Lo mismo con `robot_name: go2`: es un valor por defecto que no se usa.
+
+### El robot se mueve "como loco" al abrir Gazebo
+
+Es normal antes de iniciar `junior_ctrl`: ninguna articulación recibe órdenes. Lanza `junior_ctrl` y presiona `2` para ponerlo de pie.
+
 ### El robot no responde a `/cmd_vel`
 
-1. Confirma que presionaste `2` y luego `5` en la terminal de `junior_ctrl`.
+1. Confirma que presionaste `2` y luego `5` en la terminal de `junior_ctrl` (debe aparecer `Switched from fixed stand to move_base`). En `passive` o en `trotting` (`4`) se ignora `/cmd_vel`.
 2. Verifica que hay un suscriptor: `ros2 topic info /cmd_vel` (`Subscription count` ≥ 1).
 3. Publica con `-r 10` en vez de `--once`.
+
+### En modo `trotting` (`4`) no se mueve con las teclas
+
+Cada pulsación sube la velocidad solo unos 0.02 m/s. Pulsa `w` unas 10 veces (≈ 0.2 m/s) y deberías verlo avanzar. Asegúrate de que la terminal de `junior_ctrl` está en primer plano al pulsar. Ver [la tabla de teclas](#mover-el-go1-con-el-teclado-modo-trotting).
 
 ### Error de compilación por `lcm`
 
